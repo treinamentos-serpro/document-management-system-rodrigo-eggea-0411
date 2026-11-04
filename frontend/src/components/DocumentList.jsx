@@ -1,16 +1,7 @@
-import { useState } from 'react';
 import DownloadButton from './DownloadButton.jsx';
 import { formatDate, formatFileSize } from '../services/formatters.js';
 
 export default function DocumentList({ documents, isLoading, loadError, onRefresh, onError }) {
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  async function handleRefresh() {
-    setIsRefreshing(true);
-    await onRefresh();
-    setIsRefreshing(false);
-  }
-
   return (
     <div className="document-list">
       <div className="list-toolbar">
@@ -18,13 +9,13 @@ export default function DocumentList({ documents, isLoading, loadError, onRefres
         <button
           className="refresh-button"
           type="button"
-          onClick={handleRefresh}
-          disabled={isLoading || isRefreshing}
+          onClick={onRefresh}
+          disabled={isLoading}
           aria-label="Atualizar lista de documentos"
           title="Atualizar lista"
         >
           <span aria-hidden="true">↻</span>
-          {isRefreshing ? 'Atualizando…' : 'Atualizar'}
+          {isLoading ? 'Atualizando…' : 'Atualizar'}
         </button>
       </div>
 
