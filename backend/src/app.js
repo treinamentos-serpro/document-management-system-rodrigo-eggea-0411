@@ -25,7 +25,7 @@ app.get('/health', (req, res) => {
 
 app.use('/', documentRoutes);
 
-app.use((error, _req, res, _next) => {
+app.use((error, req, res, _next) => {
   if (res.headersSent) {
     return res.end();
   }
@@ -39,6 +39,33 @@ app.use((error, _req, res, _next) => {
 
     return res.status(400).json({
       error: { code: 'INVALID_UPLOAD', message: 'O envio do arquivo é inválido.' },
+    });
+  }
+
+  if (error.code === 'STORAGE_LIMIT_EXCEEDED') {
+    return res.status(507).json({
+      error: { code: error.code, message: error.message },
+    });
+  }
+
+  if (req.method === 'POST' && req.path === '/upload') {
+    console.error('Falha no upload de documento:', error);
+    return res.status(500).json({
+      error: { code: 'UPLOAD_FAILED', message: 'Não foi possível salvar o documento.' },
+    });
+  }
+
+  if (req.method === 'POST' && req.path === '/upload') {
+    console.error('Falha no upload de documento:', error);
+    return res.status(500).json({
+      error: { code: 'UPLOAD_FAILED', message: 'Não foi possível salvar o documento.' },
+    });
+  }
+
+  if (req.method === 'GET' && /^\/documents\/[^/]+\/download$/.test(req.path)) {
+    console.error('Falha no download de documento:', error);
+    return res.status(500).json({
+      error: { code: 'DOWNLOAD_FAILED', message: 'Não foi possível baixar o documento.' },
     });
   }
 

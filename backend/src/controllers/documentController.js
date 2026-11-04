@@ -61,7 +61,7 @@ async function download(req, res, next) {
         return;
       }
 
-      sendError(res, 500, 'DOWNLOAD_FAILED', 'Não foi possível baixar o documento.');
+      next(error);
     });
   } catch (error) {
     return next(error);

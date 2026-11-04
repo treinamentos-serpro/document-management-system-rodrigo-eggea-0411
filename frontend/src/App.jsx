@@ -9,6 +9,7 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState('');
+  const [listError, setListError] = useState('');
   const [notice, setNotice] = useState('');
 
   async function refreshDocuments() {
@@ -16,9 +17,10 @@ export default function App() {
 
     try {
       setDocuments(await listDocuments());
-      setError('');
+      setListError('');
     } catch (requestError) {
-      setError(requestError.message);
+      setDocuments([]);
+      setListError(requestError.message);
     } finally {
       setIsLoading(false);
     }
@@ -91,6 +93,7 @@ export default function App() {
             <DocumentList
               documents={documents}
               isLoading={isLoading}
+              loadError={listError}
               onRefresh={refreshDocuments}
               onError={setError}
             />

@@ -54,6 +54,8 @@ Entregar uma aplicação web que permita a um usuário enviar, listar e baixar s
 | RNF-08 | Erros da API têm formato JSON uniforme e não expõem caminhos locais, stack traces ou detalhes internos. |
 | RNF-09 | O código backend mantém dependências direcionadas `routes -> controllers -> services -> repositories`; regras de negócio não dependem de Express ou de detalhes da interface. |
 | RNF-10 | A identidade por cabeçalho descrita nesta especificação é apenas uma convenção para a primeira fase, não um mecanismo de autenticação ou uma fronteira de segurança para produção. |
+| RNF-11 | O armazenamento local tem limite total configurável por `MAX_STORAGE_BYTES`, padrão de 1 GiB; uploads que excedam o limite disponível são rejeitados com HTTP 507. |
+| RNF-12 | Uploads são processados um por vez para manter a quota total consistente. A fila aceita até `MAX_QUEUED_UPLOADS` solicitações, padrão 20; exceder a fila retorna HTTP 429. |
 
 ## 5. Identidade e modelo de dados
 
@@ -107,6 +109,8 @@ Envia um arquivo e cria os metadados do documento.
 - HTTP 400 `FILE_REQUIRED`: campo `file` ausente.
 - HTTP 400 `INVALID_UPLOAD`: corpo multipart inválido ou quantidade de arquivos não permitida.
 - HTTP 413 `FILE_TOO_LARGE`: arquivo acima do limite configurado.
+- HTTP 429 `UPLOAD_BUSY`: fila de uploads cheia; a resposta inclui `Retry-After`.
+- HTTP 507 `STORAGE_LIMIT_EXCEEDED`: armazenamento local atingiu o limite configurado.
 - HTTP 500 `UPLOAD_FAILED`: falha inesperada ao gravar arquivo ou registrar metadados. O sistema deve tentar remover o arquivo gravado se não conseguir concluir o registro.
 
 ### `GET /api/documents`
@@ -164,6 +168,7 @@ O middleware de upload grava o arquivo local antes do controller. O fluxo de ser
 ### Armazenamento e consistência
 
 - O diretório `backend/storage` deve existir ou ser criado antes do upload; falta de permissão ou falha de escrita resulta em erro controlado.
+- O diretório de armazenamento deve ter permissão restrita ao usuário do processo (modo `0700` em sistemas POSIX). O limite `MAX_STORAGE_BYTES` é calculado a partir dos arquivos locais, incluindo arquivos órfãos após reinicializações.
 - O nome físico é gerado pelo servidor e não reutiliza o nome original. A transferência não usa um caminho vindo da requisição.
 - Como os metadados são voláteis, reiniciar o backend torna os arquivos anteriores inacessíveis pela API, embora possam permanecer no disco. Reconstrução, limpeza e retenção automática desses arquivos não fazem parte desta fase.
 

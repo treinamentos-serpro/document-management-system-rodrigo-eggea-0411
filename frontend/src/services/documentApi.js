@@ -1,5 +1,23 @@
 const apiPrefix = '/api';
-const userId = import.meta.env.VITE_DMS_USER_ID || 'local-user';
+const userId = import.meta.env.VITE_DMS_USER_ID || getBrowserUserId();
+
+function getBrowserUserId() {
+  const storageKey = 'dms-user-id';
+
+  try {
+    const existingId = window.localStorage.getItem(storageKey);
+
+    if (existingId) {
+      return existingId;
+    }
+
+    const generatedId = `local-${crypto.randomUUID()}`;
+    window.localStorage.setItem(storageKey, generatedId);
+    return generatedId;
+  } catch {
+    return `local-${crypto.randomUUID()}`;
+  }
+}
 
 async function request(path, options = {}) {
   const response = await fetch(`${apiPrefix}${path}`, {

@@ -1,4 +1,5 @@
 const { randomUUID } = require('node:crypto');
+const { maxStorageBytes } = require('../config');
 const documentRepository = require('../repositories/documentRepository');
 
 async function upload(file, owner) {
@@ -12,6 +13,14 @@ async function upload(file, owner) {
   };
 
   try {
+    const storageUsage = await documentRepository.getStorageUsageBytes();
+
+    if (storageUsage > maxStorageBytes) {
+      const error = new Error('O armazenamento local atingiu o limite configurado.');
+      error.code = 'STORAGE_LIMIT_EXCEEDED';
+      throw error;
+    }
+
     return await documentRepository.create(document);
   } catch (error) {
     await documentRepository.removeFile(file.filename).catch(() => {});

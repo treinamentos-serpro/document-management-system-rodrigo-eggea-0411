@@ -2,7 +2,7 @@ import { useState } from 'react';
 import DownloadButton from './DownloadButton.jsx';
 import { formatDate, formatFileSize } from '../services/formatters.js';
 
-export default function DocumentList({ documents, isLoading, onRefresh, onError }) {
+export default function DocumentList({ documents, isLoading, loadError, onRefresh, onError }) {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   async function handleRefresh() {
@@ -30,6 +30,8 @@ export default function DocumentList({ documents, isLoading, onRefresh, onError 
 
       {isLoading ? (
         <p className="list-state" role="status">Carregando documentos…</p>
+      ) : loadError ? (
+        <p className="list-state" role="alert">{loadError}</p>
       ) : documents.length === 0 ? (
         <div className="empty-state">
           <span className="empty-mark" aria-hidden="true">—</span>
