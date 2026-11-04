@@ -1,52 +1,20 @@
-import { useEffect, useState } from 'react';
 import DocumentList from './components/DocumentList.jsx';
 import UploadComponent from './components/UploadComponent.jsx';
-import { listDocuments, uploadDocument } from './services/documentApi.js';
+import useDocuments from './hooks/useDocuments.js';
 import './styles.css';
 
 export default function App() {
-  const [documents, setDocuments] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isUploading, setIsUploading] = useState(false);
-  const [error, setError] = useState('');
-  const [listError, setListError] = useState('');
-  const [notice, setNotice] = useState('');
-
-  async function refreshDocuments() {
-    setIsLoading(true);
-
-    try {
-      setDocuments(await listDocuments());
-      setListError('');
-    } catch (requestError) {
-      setDocuments([]);
-      setListError(requestError.message);
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    refreshDocuments();
-  }, []);
-
-  async function handleUpload(file) {
-    setError('');
-    setNotice('');
-    setIsUploading(true);
-
-    try {
-      const document = await uploadDocument(file);
-      setNotice(`“${document.originalName}” enviado com sucesso.`);
-      await refreshDocuments();
-      return true;
-    } catch (requestError) {
-      setError(requestError.message);
-      return false;
-    } finally {
-      setIsUploading(false);
-    }
-  }
+  const {
+    documents,
+    error,
+    handleUpload,
+    isLoading,
+    isUploading,
+    listError,
+    notice,
+    onError,
+    refreshDocuments,
+  } = useDocuments();
 
   return (
     <main className="app-shell">
@@ -95,7 +63,7 @@ export default function App() {
               isLoading={isLoading}
               loadError={listError}
               onRefresh={refreshDocuments}
-              onError={setError}
+              onError={onError}
             />
           </section>
         </div>
