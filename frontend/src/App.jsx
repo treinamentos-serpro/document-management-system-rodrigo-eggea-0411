@@ -1,20 +1,107 @@
-// Seed do componente raiz do Document Management System.
-//
-// Este é apenas um ponto de partida mínimo. Durante o Passo 3 você vai usar o
-// Agent Mode do GitHub Copilot para construir os componentes:
-//   - components/UploadComponent
-//   - components/DocumentList
-//   - components/DownloadButton
-// e o serviço services/ que consome a API do backend via fetch.
+import { useEffect, useState } from 'react';
+import DocumentList from './components/DocumentList.jsx';
+import UploadComponent from './components/UploadComponent.jsx';
+import { listDocuments, uploadDocument } from './services/documentApi.js';
+import './styles.css';
 
 export default function App() {
+  const [documents, setDocuments] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
+
+  async function refreshDocuments() {
+    setIsLoading(true);
+
+    try {
+      setDocuments(await listDocuments());
+      setError('');
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    refreshDocuments();
+  }, []);
+
+  async function handleUpload(file) {
+    setError('');
+    setNotice('');
+    setIsUploading(true);
+
+    try {
+      const document = await uploadDocument(file);
+      setNotice(`“${document.originalName}” enviado com sucesso.`);
+      await refreshDocuments();
+      return true;
+    } catch (requestError) {
+      setError(requestError.message);
+      return false;
+    } finally {
+      setIsUploading(false);
+    }
+  }
+
   return (
-    <main style={{ fontFamily: 'system-ui, sans-serif', padding: '2rem' }}>
-      <h1>Document Management System</h1>
-      <p>
-        Seed do frontend. Construa a interface durante o Passo 3 usando o Agent
-        Mode do GitHub Copilot.
-      </p>
+    <main className="app-shell">
+      <header className="topbar">
+        <a className="brand" href="#inicio" aria-label="DMS, início">
+          <span className="brand-mark" aria-hidden="true">D</span>
+          <span>DMS <span className="brand-divider">/</span> Arquivo local</span>
+        </a>
+        <span className="storage-status"><span aria-hidden="true" /> Armazenamento local</span>
+      </header>
+
+      <section className="workspace" id="inicio">
+        <div className="page-heading">
+          <div>
+            <p className="eyebrow">DOCUMENT MANAGEMENT SYSTEM</p>
+            <h1>Seus documentos<span>.</span></h1>
+          </div>
+          <p className="page-date">Acesse e organize seus arquivos</p>
+        </div>
+
+        <div className="workspace-grid">
+          <aside className="upload-panel" aria-labelledby="upload-heading">
+            <div className="section-heading">
+              <span className="section-index">01</span>
+              <h2 id="upload-heading">Adicionar arquivo</h2>
+            </div>
+            <UploadComponent onUpload={handleUpload} isUploading={isUploading} />
+          </aside>
+
+          <section className="documents-panel" aria-labelledby="documents-heading">
+            <div className="documents-heading">
+              <div className="section-heading">
+                <span className="section-index">02</span>
+                <h2 id="documents-heading">Biblioteca</h2>
+              </div>
+              <span className="document-count">
+                {documents.length} {documents.length === 1 ? 'arquivo' : 'arquivos'}
+              </span>
+            </div>
+
+            {error && <p className="message message-error" role="alert">{error}</p>}
+            {notice && <p className="message message-success" role="status">{notice}</p>}
+
+            <DocumentList
+              documents={documents}
+              isLoading={isLoading}
+              onRefresh={refreshDocuments}
+              onError={setError}
+            />
+          </section>
+        </div>
+      </section>
+
+      <footer className="page-footer">
+        <span>DMS <span aria-hidden="true">·</span> Seus arquivos, em um só lugar</span>
+        <span>Os documentos são armazenados neste servidor</span>
+      </footer>
     </main>
   );
 }
